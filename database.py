@@ -1,20 +1,18 @@
-# Database Connection Code
+import os
 import mysql.connector
 
+
 def connect_db():
-    import mysql.connector
-
     connection = mysql.connector.connect(
-        host="127.0.0.1",
-        port=3306,
-        user="root",
-        password="root",
-        database="civic_issue_db",
-        auth_plugin="mysql_native_password",
-        use_pure=True
+        host=os.getenv("MYSQLHOST", "127.0.0.1"),
+        port=int(os.getenv("MYSQLPORT", 3306)),
+        user=os.getenv("MYSQLUSER", "root"),
+        password=os.getenv("MYSQLPASSWORD", "root"),
+        database=os.getenv("MYSQLDATABASE", "civic_issue_db"),
+        connection_timeout=10
     )
-
     return connection
+
 
 # API 1: Extract department information
 def get_departments():
@@ -23,13 +21,12 @@ def get_departments():
 
     query = "SELECT * FROM departments"
     cursor.execute(query)
-
     result = cursor.fetchall()
 
     cursor.close()
     connection.close()
-
     return result
+
 
 # API 2: Save issue in database
 def save_issue(user_id, department_id, issue_type, image_url, location):
@@ -38,143 +35,105 @@ def save_issue(user_id, department_id, issue_type, image_url, location):
 
     query = """
     INSERT INTO complaints (user_id, department_id, issue_type, image_url, location)
-    VALUES (%s,%s,%s,%s,%s)
+    VALUES (%s, %s, %s, %s, %s)
     """
 
-    cursor.execute(query,(user_id,department_id,issue_type,image_url,location))
+    cursor.execute(query, (user_id, department_id, issue_type, image_url, location))
     connection.commit()
 
     cursor.close()
     connection.close()
 
-    # API 3: Admin can add department
-def add_department(name,email):
+
+# API 3: Admin can add department
+def add_department(department_name, email):
     connection = connect_db()
     cursor = connection.cursor()
 
     query = """
-    INSERT INTO departments (name,email)
-    VALUES (%s,%s)
+    INSERT INTO departments (department_name, email)
+    VALUES (%s, %s)
     """
 
-    cursor.execute(query,(name,email))
+    cursor.execute(query, (department_name, email))
     connection.commit()
 
     cursor.close()
     connection.close()
 
-    # API 4: Admin filter issues by department
+
+# API 4: Admin filter issues by department
 def filter_issues(department_id):
     connection = connect_db()
     cursor = connection.cursor(dictionary=True)
 
     query = """
     SELECT * FROM complaints
-    WHERE department_id=%s
+    WHERE department_id = %s
     """
 
-    cursor.execute(query,(department_id,))
+    cursor.execute(query, (department_id,))
     result = cursor.fetchall()
 
     cursor.close()
     connection.close()
-
     return result
 
+
 # API 5: Store user login information
-def save_user(name,email,password):
+def save_user(name, email, password, department_id=None):
     connection = connect_db()
     cursor = connection.cursor()
 
     query = """
-    INSERT INTO users (name,email,password)
-    VALUES (%s,%s,%s)
+    INSERT INTO users (name, email, password, department_id)
+    VALUES (%s, %s, %s, %s)
     """
 
-    cursor.execute(query,(name,email,password))
+    cursor.execute(query, (name, email, password, department_id))
     connection.commit()
 
     cursor.close()
     connection.close()
 
-    # API 6: Update complaint status
+
+# API 6: Update complaint status
 def update_status(complaint_id, status):
     connection = connect_db()
     cursor = connection.cursor()
 
     query = """
     UPDATE complaints
-    SET status=%s
-    WHERE complaint_id=%s
+    SET status = %s
+    WHERE complaint_id = %s
     """
 
-    cursor.execute(query,(status,complaint_id))
+    cursor.execute(query, (status, complaint_id))
     connection.commit()
 
     cursor.close()
     connection.close()
 
-#Create Complaint
-def create_complaint(user_id, department_id, issue_type, image_url, location):
-    connection = connect_db()
-    cursor = connection.cursor()
 
-    query = """
-    INSERT INTO complaints (user_id, department_id, issue_type, image_url, location)
-    VALUES (%s,%s,%s,%s,%s)
-    """
-
-    cursor.execute(query,(user_id,department_id,issue_type,image_url,location))
-    connection.commit()
-
-    cursor.close()
-    connection.close()
-
-#Get Complaints for Department
+# Extra: Get complaints for department
 def get_department_complaints(department_id):
-    print("Connecting to database...")
-
     connection = connect_db()
-
-    print("Connection established")
-
     cursor = connection.cursor(dictionary=True)
-
-    print("Cursor created")
 
     query = """
     SELECT * FROM complaints
-    WHERE department_id=%s
+    WHERE department_id = %s
     """
 
-    cursor.execute(query,(department_id,))
-    print("Query executed")
-
+    cursor.execute(query, (department_id,))
     result = cursor.fetchall()
-    print("Data fetched")
 
     cursor.close()
     connection.close()
-
     return result
-#Update Complaint Status
-def update_status(complaint_id,status):
-    connection = connect_db()
-    cursor = connection.cursor()
 
-    query = """
-    UPDATE complaints
-    SET status=%s
-    WHERE complaint_id=%s
-    """
 
-    cursor.execute(query,(status,complaint_id))
-    connection.commit()
-
-    cursor.close()
-    connection.close()
-
-#Get Department Email
+# Extra: Get department email from complaint
 def get_department_email(complaint_id):
     connection = connect_db()
     cursor = connection.cursor()
@@ -184,13 +143,12 @@ def get_department_email(complaint_id):
     FROM complaints c
     JOIN departments d
     ON c.department_id = d.department_id
-    WHERE c.complaint_id=%s
+    WHERE c.complaint_id = %s
     """
 
-    cursor.execute(query,(complaint_id,))
+    cursor.execute(query, (complaint_id,))
     email = cursor.fetchone()
 
     cursor.close()
     connection.close()
-
-    return email
+    return email[0] if email else None
