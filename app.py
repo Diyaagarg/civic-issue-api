@@ -34,21 +34,14 @@ def get_department(department_id):
     return jsonify(data)
 
 
-@app.route("/get_department_by_issue", methods=["POST"])
-def get_department_by_issue():
-    data = request.get_json()
-    issue_type = data.get("issue_type")
-
-    if not issue_type:
-        return jsonify({"error": "issue_type is required"}), 400
-
+@app.route("/get_department_by_issue/<issue_type>", methods=["GET"])
+def get_department_by_issue(issue_type):
     department = get_department_by_issue_type(issue_type)
 
     if not department:
         return jsonify({"error": "No department found for this issue type"}), 404
 
     return jsonify(department)
-
 
 @app.route("/save_issue", methods=["POST"])
 def save_issue_api():
