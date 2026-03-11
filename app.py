@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from database import (
     get_departments,
     get_department_by_id,
+    get_department_by_issue_type ,
     save_issue,
     add_department,
     filter_issues,
@@ -31,6 +32,22 @@ def get_department(department_id):
         return jsonify({"error": "Department not found"}), 404
 
     return jsonify(data)
+
+
+@app.route("/get_department_by_issue", methods=["POST"])
+def get_department_by_issue():
+    data = request.get_json()
+    issue_type = data.get("issue_type")
+
+    if not issue_type:
+        return jsonify({"error": "issue_type is required"}), 400
+
+    department = get_department_by_issue_type(issue_type)
+
+    if not department:
+        return jsonify({"error": "No department found for this issue type"}), 404
+
+    return jsonify(department)
 
 
 @app.route("/save_issue", methods=["POST"])

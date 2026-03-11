@@ -46,6 +46,37 @@ def get_department_by_id(department_id):
     return result
 
 
+def get_department_by_issue_type(issue_type):
+    issue_type = issue_type.lower().strip()
+
+    if "pothole" in issue_type or "road" in issue_type:
+        department_id = 1
+    elif "water" in issue_type or "pipe" in issue_type:
+        department_id = 2
+    elif "electricity" in issue_type or "street light" in issue_type or "power" in issue_type:
+        department_id = 3
+    elif "garbage" in issue_type or "sanitation" in issue_type or "waste" in issue_type:
+        department_id = 4
+    else:
+        return None
+
+    connection = connect_db()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """
+    SELECT * FROM departments
+    WHERE department_id = %s
+    """
+
+    cursor.execute(query, (department_id,))
+    result = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    return result
+
+
 # API 2: Save issue in database
 def save_issue(user_id, department_id, issue_type, image_url, location):
     connection = connect_db()
