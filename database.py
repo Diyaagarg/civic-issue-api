@@ -28,6 +28,24 @@ def get_departments():
     return result
 
 
+def get_department_by_id(department_id):
+    connection = connect_db()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """
+    SELECT * FROM departments
+    WHERE department_id = %s
+    """
+
+    cursor.execute(query, (department_id,))
+    result = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    return result
+
+
 # API 2: Save issue in database
 def save_issue(user_id, department_id, issue_type, image_url, location):
     connection = connect_db()

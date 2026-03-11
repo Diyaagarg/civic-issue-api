@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from database import (
     get_departments,
+    get_department_by_id,
     save_issue,
     add_department,
     filter_issues,
@@ -19,6 +20,16 @@ def home():
 @app.route("/departments", methods=["GET"])
 def departments():
     data = get_departments()
+    return jsonify(data)
+
+
+@app.route("/departments/<int:department_id>", methods=["GET"])
+def get_department(department_id):
+    data = get_department_by_id(department_id)
+
+    if not data:
+        return jsonify({"error": "Department not found"}), 404
+
     return jsonify(data)
 
 
