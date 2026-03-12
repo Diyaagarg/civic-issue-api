@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from database import (
     get_departments,
     get_department_by_id,
@@ -12,7 +13,7 @@ from database import (
 )
 
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route("/")
 def home():
