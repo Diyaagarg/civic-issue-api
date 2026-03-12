@@ -78,10 +78,23 @@ def get_department_by_issue_type(issue_type):
 
 
 # API 2: Save issue in database
-def save_issue(user_id, department_id, issue_type, image_url, location):
+def save_issue(email, department_id, issue_type, image_url, location):
     connection = connect_db()
     cursor = connection.cursor()
 
+    # 1: Get user_id from email
+    user_query = "SELECT user_id FROM users WHERE email = %s"
+    cursor.execute(user_query, (email,))
+    user = cursor.fetchone()
+
+    if not user:
+        cursor.close()
+        connection.close()
+        return {"error": "User not found"}
+
+    user_id = user[0]
+
+    # 2: save complaint using user_id
     query = """
     INSERT INTO complaints (user_id, department_id, issue_type, image_url, location)
     VALUES (%s, %s, %s, %s, %s)
@@ -93,6 +106,28 @@ def save_issue(user_id, department_id, issue_type, image_url, location):
     cursor.close()
     connection.close()
 
+    return {"message": "Issue saved"}
+
+# 
+def get_user_history(email):
+    connection = connect_db()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """
+    SELECT c.complaint_id, c.issue_type, c.image_url, c.location, c.status, c.department_id
+    FROM complaints c
+    JOIN users u ON c.user_id = u.user_id
+    WHERE u.email = %s
+    ORDER BY c.complaint_id DESC
+    """
+
+    cursor.execute(query, (email,))
+    result = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return result
 
 # API 3: Admin can add department
 def add_department(department_name, email):

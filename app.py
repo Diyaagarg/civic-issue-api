@@ -3,6 +3,7 @@ from database import (
     get_departments,
     get_department_by_id,
     get_department_by_issue_type ,
+    get_user_history,
     save_issue,
     add_department,
     filter_issues,
@@ -43,19 +44,37 @@ def get_department_by_issue(issue_type):
 
     return jsonify(department)
 
+
 @app.route("/save_issue", methods=["POST"])
 def save_issue_api():
     data = request.get_json()
 
-    save_issue(
-        data["user_id"],
+    result = save_issue(
+        data["email"],
         data["department_id"],
         data["issue_type"],
         data.get("image_url"),
         data["location"]
     )
 
-    return jsonify({"message": "Issue saved"}), 201
+    if "error" in result:
+        return jsonify(result), 404
+
+    return jsonify(result), 201
+
+
+@app.route("/user_history", methods=["POST"])
+def user_history_api():
+    data = request.get_json()
+
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "email is required"}), 400
+
+    history = get_user_history(email)
+
+    return jsonify(history)
 
 
 @app.route("/add_department", methods=["POST"])
