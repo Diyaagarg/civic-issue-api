@@ -76,37 +76,43 @@ def get_department_by_issue_type(issue_type):
 
     return result
 
-
 # API 2: Save issue in database
 def save_issue(email, department_id, issue_type, image_url, location):
-    connection = connect_db()
-    cursor = connection.cursor()
+    try:
+        connection = connect_db()
+        cursor = connection.cursor()
 
-    # 1: Get user_id from email
-    user_query = "SELECT user_id FROM users WHERE email = %s"
-    cursor.execute(user_query, (email,))
-    user = cursor.fetchone()
+        # 1: Get user_id from email
+        user_query = "SELECT user_id FROM users WHERE email = %s"
+        cursor.execute(user_query, (email,))
+        user = cursor.fetchone()
 
-    if not user:
+        if not user:
+            cursor.close()
+            connection.close()
+            return {"error": "User not found"}
+
+        user_id = user[0]
+
+        # 2: save complaint using user_id
+        query = """
+        INSERT INTO complaints (user_id, department_id, issue_type, image_url, location)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+
+        cursor.execute(query, (user_id, department_id, issue_type, image_url, location))
+        connection.commit()
+
         cursor.close()
         connection.close()
-        return {"error": "User not found"}
 
-    user_id = user[0]
+        return {"message": "Issue saved"}
 
-    # 2: save complaint using user_id
-    query = """
-    INSERT INTO complaints (user_id, department_id, issue_type, image_url, location)
-    VALUES (%s, %s, %s, %s, %s)
-    """
+    except mysql.connector.Error as err:
+        return {"error": str(err)}
 
-    cursor.execute(query, (user_id, department_id, issue_type, image_url, location))
-    connection.commit()
-
-    cursor.close()
-    connection.close()
-
-    return {"message": "Issue saved"}
+    except Exception as e:
+        return {"error": str(e)}
 
 # 
 def get_user_history(email):

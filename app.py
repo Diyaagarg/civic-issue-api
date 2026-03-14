@@ -45,7 +45,6 @@ def get_department_by_issue(issue_type):
 
     return jsonify(department)
 
-
 @app.route("/save_issue", methods=["POST"])
 def save_issue_api():
     data = request.get_json()
@@ -59,7 +58,9 @@ def save_issue_api():
     )
 
     if "error" in result:
-        return jsonify(result), 404
+        if result["error"] == "User not found":
+            return jsonify(result), 404
+        return jsonify(result), 500
 
     return jsonify(result), 201
 
