@@ -4,12 +4,13 @@ import mysql.connector
 
 def connect_db():
     connection = mysql.connector.connect(
-        host=os.getenv("MYSQLHOST", "127.0.0.1"),
-        port=int(os.getenv("MYSQLPORT", 3306)),
-        user=os.getenv("MYSQLUSER", "root"),
-        password=os.getenv("MYSQLPASSWORD", "root"),
-        database=os.getenv("MYSQLDATABASE", "civic_issue_db"),
-        connection_timeout=10
+        host=os.getenv("MYSQLHOST"),
+        port=int(os.getenv("MYSQLPORT")),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
+        connection_timeout=30,
+        auth_plugin='mysql_native_password'
     )
     return connection
 
